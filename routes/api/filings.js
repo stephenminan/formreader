@@ -65,7 +65,7 @@ router.get('/updatedb', async (req, res) => {
 // @access  Public
 router.get('/', async (req, res) => {
     try {
-        const returns = await Filings.find();
+        const returns = await Filings.find().limit(10);
 
         res.json(returns);
 
@@ -90,31 +90,10 @@ router.get('/return/:return_id', async (req, res) => {
     }
 });
 
-// @route   GET api/filings/reeturn/:return_id
-// @desc    Get all returns
-// @access  Public
-// router.get('/organization/:name', async (req, res) => {
-//     try {
-//         const returns = await Filings.find({ OrganizationName: req.params.name });
-//         console.log(req.params.org_name);
-//         res.json(returns);
-
-//     } catch (err) {
-//         console.error(err.message);
-//         res.status(500).send('Server Error');
-//     }
-// });
-
-
-
-
-
 // @route   GET api/filings/return/:return_id
 // @desc    Get all returns
 // @access  Public
-router.get('/:org_ein', async (req, res) => {
-
-
+router.get('/org/:org_ein', async (req, res) => {
     try {
         console.log('starting');
         const xmlUrls = await Filings.find({ EIN: req.params.org_ein });
@@ -128,7 +107,6 @@ router.get('/:org_ein', async (req, res) => {
         }
         console.log(urlList.length);
         const parser = new xml2js.Parser();
-
 
         const parsedJson = async function () {
             let list = [];
