@@ -5,19 +5,27 @@
   "main": "server.js",
   "scripts": {
     "start": "node server",
-    "server": "nodemon server"
+    "server": "nodemon --max_old_space_size=8192 server"
   },
   "author": "Stephen An",
   "license": "MIT",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "config": "^3.3.6",
+    "d3": "^6.7.0",
     "express": "^4.17.1",
     "express-validator": "^6.11.1",
     "gravatar": "^1.8.1",
+    "http": "0.0.1-security",
+    "https": "^1.0.0",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.12.11",
-    "request": "^2.88.2"
+    "node-fetch": "^2.6.1",
+    "request": "^2.88.2",
+    "request-promise": "^4.2.6",
+    "xml": "^1.0.1",
+    "xml2js": "^0.4.23",
+    "xmlhttprequest": "^1.8.0"
   },
   "devDependencies": {
     "concurrently": "^6.2.0",
