@@ -6,6 +6,8 @@ const XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest;
 const xml2js = require('xml2js');
 const https = require('https');
 const request = require('request-promise');
+const cors = require('cors');
+const BodyParser = require('body-parser');
 const { check, validationResult } = require('express-validator');
 
 
@@ -24,6 +26,23 @@ const Filings = require('../../models/Filings');
 // 'https://s3.amazonaws.com/irs-form-990/index_2020.json'
 // ];
 
+[
+    {
+        '$search': {
+            'text': {
+                'query': 'saint michaels college',
+                'path': 'OrganizationName'
+            },
+            'highlight': {
+                'path': 'OrganizationName'
+            }
+        }
+    }, {
+        '$match': {
+            'FormType': '990'
+        }
+    }
+]
 
 // @route   GET api/filings/updatedb
 // @desc    Update DB from irs db
@@ -63,10 +82,19 @@ router.get('/updatedb', async (req, res) => {
 // @route   GET api/filings
 // @desc    Get all returns
 // @access  Public
-router.get('/', async (req, res) => {
+router.get('/org', async (req, res) => {
     try {
-        const returns = await Filings.find().limit(10);
-
+        const pipline = [
+            {
+                '$match': {
+                    'FormType': '990'
+                }
+            }, {
+                '$limit': 100
+            }
+        ];
+        // const returns = await Filings.find().limit(10);
+        const returns = await Filings.aggregate(pipline);
         res.json(returns);
 
     } catch (err) {
@@ -75,7 +103,36 @@ router.get('/', async (req, res) => {
     }
 });
 
-// @route   GET api/filings/reeturn/:return_id
+// @route   GET api/filings/search
+// @desc    Search 
+// @access  Public
+router.get('/search', async (req, res) => {
+    const pipeline = [
+        {
+            "$search": {
+                "autocomplete": {
+                    "query": `${req.query.query}`,
+                    "path": "OrganizationName",
+                    "fuzzy": {
+                        "maxEdits": 2,
+                        "prefixLength": 3
+                    }
+                }
+            }
+        }
+    ]
+    try {
+        const result = await Filings.aggregate(pipeline);
+
+        res.json(result);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+})
+
+
+// @route   GET api/filings/return/:return_id
 // @desc    Get all returns
 // @access  Public
 router.get('/return/:return_id', async (req, res) => {
@@ -95,11 +152,9 @@ router.get('/return/:return_id', async (req, res) => {
 // @access  Public
 router.get('/org/:org_ein', async (req, res) => {
     try {
-        console.log('starting');
         const xmlUrls = await Filings.find({ EIN: req.params.org_ein });
 
         let urlList = [];
-        let returns = [];
         for (let [key, value] of Object.entries(xmlUrls)) {
             if (value.FormType == '990') {
                 urlList.push(value.URL);
@@ -129,5 +184,7 @@ router.get('/org/:org_ein', async (req, res) => {
     }
 }
 );
+
+
 
 module.exports = router;
